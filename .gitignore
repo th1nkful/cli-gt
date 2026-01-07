@@ -8,8 +8,8 @@
 *.so
 *.dylib
 
-# Built CLI binary
-gt
+# Built CLI binary (only in root directory)
+/gt
 
 # Test binary, built with `go test -c`
 *.test
