@@ -87,6 +87,12 @@ func TestSaveAndLoadConfig(t *testing.T) {
 		t.Fatalf("Failed to save config: %v", err)
 	}
 
+	// Verify config file is stored in .git/gt/ directory
+	configPath := filepath.Join(gitDir, "gt", "config.json")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		t.Errorf("Config file not created at expected path: %s", configPath)
+	}
+
 	// Load config
 	loadedCfg, err := Load()
 	if err != nil {
@@ -111,7 +117,7 @@ func TestSaveAndLoadConfig(t *testing.T) {
 	}
 }
 
-func TestFindGitRoot(t *testing.T) {
+func TestFindGitDir(t *testing.T) {
 	// Create a temporary directory structure
 	tempDir, err := os.MkdirTemp("", "gt-test-*")
 	if err != nil {
@@ -142,13 +148,13 @@ func TestFindGitRoot(t *testing.T) {
 		t.Fatalf("Failed to change to subdir: %v", err)
 	}
 
-	// Find git root
-	root, err := findGitRoot()
+	// Find git directory
+	foundGitDir, err := findGitDir()
 	if err != nil {
-		t.Fatalf("Failed to find git root: %v", err)
+		t.Fatalf("Failed to find git dir: %v", err)
 	}
 
-	if root != tempDir {
-		t.Errorf("Expected git root '%s', got '%s'", tempDir, root)
+	if foundGitDir != gitDir {
+		t.Errorf("Expected git dir '%s', got '%s'", gitDir, foundGitDir)
 	}
 }

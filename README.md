@@ -40,25 +40,18 @@ gt [command] [flags]
 
 ### Configuration
 
-The tool stores workspace settings in `.gt-config.json` at the root of your Git repository. This file includes:
+The tool stores workspace settings internally within the `.git` directory (specifically at `.git/gt/config.json`). This ensures:
+
+- **Invisible to users**: Configuration is stored in the same hidden location as other git metadata
+- **Device-specific**: Settings are unique to each local workspace and never committed to the repository
+- **Seamless**: No need to add entries to `.gitignore` or manage configuration files manually
+
+The configuration includes:
 
 - `trunk_branch`: The main/trunk branch for the repository (default: "main")
 - `managed_branches`: A map of branches managed by gt with their metadata
 
-Example configuration:
-
-```json
-{
-  "trunk_branch": "main",
-  "managed_branches": {
-    "feature-branch": {
-      "name": "feature-branch",
-      "parent": "main",
-      "description": "Feature description"
-    }
-  }
-}
-```
+Configuration is automatically created and managed by the tool when you use commands like `create` or `modify`.
 
 ## Development
 
