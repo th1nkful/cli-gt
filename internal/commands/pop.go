@@ -8,8 +8,8 @@ import (
 
 var popCmd = &cobra.Command{
 	Use:   "pop",
-	Short: "Pop the current branch",
-	Long:  `Pop the current branch (typically to remove and archive a completed branch).`,
+	Short: "Undo the current branch and commit",
+	Long:  `Undo the current branch and commit, returning the files from the commit/branch to an uncommitted state. This effectively undoes the 'create' command. Will not run on trunk branch.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("pop command - not yet implemented")
 		return nil

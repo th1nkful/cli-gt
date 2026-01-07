@@ -8,8 +8,8 @@ import (
 
 var modifyCmd = &cobra.Command{
 	Use:   "modify",
-	Short: "Modify branch settings",
-	Long:  `Modify settings for the current or specified branch.`,
+	Short: "Amend the current commit",
+	Long:  `Amend the current commit. This allows you to modify the most recent commit on the current branch. Will not run on trunk branch.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("modify command - not yet implemented")
 		return nil
