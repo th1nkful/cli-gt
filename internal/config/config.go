@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Config represents the workspace configuration
@@ -113,12 +114,11 @@ func findGitDir() (string, error) {
 				return "", fmt.Errorf("failed to read .git file: %w", err)
 			}
 			// Parse "gitdir: /path/to/git/dir" format
+			content := strings.TrimSpace(string(data))
 			gitdirPrefix := "gitdir: "
-			content := string(data)
-			if len(content) > len(gitdirPrefix) && content[:len(gitdirPrefix)] == gitdirPrefix {
-				actualGitDir := content[len(gitdirPrefix):]
-				actualGitDir = filepath.Clean(actualGitDir[:len(actualGitDir)-1]) // Remove trailing newline
-				return actualGitDir, nil
+			if strings.HasPrefix(content, gitdirPrefix) {
+				actualGitDir := strings.TrimSpace(content[len(gitdirPrefix):])
+				return filepath.Clean(actualGitDir), nil
 			}
 		}
 
