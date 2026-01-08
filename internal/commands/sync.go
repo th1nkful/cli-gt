@@ -84,8 +84,11 @@ func runSync(cmd *cobra.Command, args []string) error {
 			if err := deleteBranch(branchName, cfg.TrunkBranch); err != nil {
 				fmt.Printf("Warning: Failed to delete branch '%s': %v\n", branchName, err)
 			} else {
-				// Remove from managed branches
+				// Remove from managed branches and save config immediately
 				delete(cfg.ManagedBranches, branchName)
+				if err := cfg.Save(); err != nil {
+					fmt.Printf("Warning: Failed to save config after deleting '%s': %v\n", branchName, err)
+				}
 				fmt.Printf("Deleted branch '%s'\n", branchName)
 			}
 		} else {
@@ -167,11 +170,17 @@ func deleteBranch(branchName, trunkBranch string) error {
 		return err
 	}
 
-	// Force delete the branch (-D to delete even if not fully merged)
-	cmd := exec.Command("git", "branch", "-D", branchName)
+	// Try safe delete first (-d), which fails if branch has unmerged commits
+	cmd := exec.Command("git", "branch", "-d", branchName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to delete branch '%s': %w\nOutput: %s", branchName, err, string(output))
+		// If safe delete fails, try force delete (-D)
+		fmt.Printf("Note: Branch '%s' has unmerged commits, force deleting...\n", branchName)
+		cmd = exec.Command("git", "branch", "-D", branchName)
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to delete branch '%s': %w\nOutput: %s", branchName, err, string(output))
+		}
 	}
 	return nil
 }
@@ -189,7 +198,9 @@ func rebaseBranchOntoTrunk(branchName, trunkBranch string) error {
 	if err != nil {
 		// Abort the rebase if it fails
 		abortCmd := exec.Command("git", "rebase", "--abort")
-		abortCmd.Run() // Ignore error from abort
+		if abortErr := abortCmd.Run(); abortErr != nil {
+			fmt.Printf("Warning: Failed to abort rebase for '%s': %v\n", branchName, abortErr)
+		}
 		return fmt.Errorf("failed to rebase branch '%s' onto '%s': %w\nOutput: %s", branchName, trunkBranch, err, string(output))
 	}
 	return nil
