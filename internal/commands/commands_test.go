@@ -40,6 +40,19 @@ func TestModifyCommandExists(t *testing.T) {
 	}
 }
 
+func TestModifyCommandHasAllFlag(t *testing.T) {
+	// Verify that the -a flag exists for modify command
+	flag := modifyCmd.Flags().Lookup("all")
+	if flag == nil {
+		t.Error("Expected 'all' flag to exist for modify command")
+	}
+	
+	// Verify the shorthand
+	if flag != nil && flag.Shorthand != "a" {
+		t.Errorf("Expected 'all' flag shorthand to be 'a', got '%s'", flag.Shorthand)
+	}
+}
+
 func TestCheckoutCommandExists(t *testing.T) {
 	if checkoutCmd.Use != "checkout [branch]" {
 		t.Errorf("checkout command Use string is incorrect: %s", checkoutCmd.Use)
