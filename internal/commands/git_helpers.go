@@ -133,10 +133,11 @@ func getBranches() ([]string, error) {
 	}
 
 	// Parse branches
-	allBranches := strings.Split(strings.TrimSpace(string(output)), "\n")
-	if len(allBranches) == 0 || (len(allBranches) == 1 && allBranches[0] == "") {
+	trimmedOutput := strings.TrimSpace(string(output))
+	if trimmedOutput == "" {
 		return nil, fmt.Errorf("no branches found")
 	}
+	allBranches := strings.Split(trimmedOutput, "\n")
 
 	// Separate trunk branch from others
 	var branches []string
