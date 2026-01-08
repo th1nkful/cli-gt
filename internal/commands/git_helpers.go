@@ -20,18 +20,19 @@ func getCurrentBranch() (string, error) {
 }
 
 // isOnTrunkBranch checks if the current branch is the trunk branch
-func isOnTrunkBranch() (bool, error) {
+// Returns: (isOnTrunk, config, error)
+func isOnTrunkBranch() (bool, *config.Config, error) {
 	cfg, err := config.Load()
 	if err != nil {
-		return false, fmt.Errorf("failed to load config: %w", err)
+		return false, nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
 	currentBranch, err := getCurrentBranch()
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 
-	return currentBranch == cfg.TrunkBranch, nil
+	return currentBranch == cfg.TrunkBranch, cfg, nil
 }
 
 // branchExists checks if a branch exists locally or remotely
@@ -40,17 +41,18 @@ func branchExists(branchName string) (bool, bool, error) {
 	localCmd := exec.Command("git", "rev-parse", "--verify", branchName)
 	localExists := localCmd.Run() == nil
 
+	// Check if remote 'origin' exists
+	remoteCheckCmd := exec.Command("git", "remote", "get-url", "origin")
+	if err := remoteCheckCmd.Run(); err != nil {
+		// No remote configured, that's ok - just return local status
+		return localExists, false, nil
+	}
+
 	// Check remote branches
 	remoteCmd := exec.Command("git", "ls-remote", "--heads", "origin", branchName)
 	remoteOutput, err := remoteCmd.CombinedOutput()
 	if err != nil {
-		// Check if the error is due to no remote configured
-		if strings.Contains(string(remoteOutput), "does not appear to be a git repository") ||
-			strings.Contains(err.Error(), "exit status 128") {
-			// No remote configured, that's ok - just return local status
-			return localExists, false, nil
-		}
-		// Other errors (network issues, auth failures) should be reported
+		// Report errors when remote exists but ls-remote fails (network, auth, etc.)
 		return localExists, false, fmt.Errorf("failed to check remote branches: %w", err)
 	}
 	remoteExists := len(strings.TrimSpace(string(remoteOutput))) > 0

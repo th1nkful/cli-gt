@@ -18,16 +18,12 @@ var createCmd = &cobra.Command{
 	Long:  `Create a new branch and commit. This creates a new branch from the current state and makes an initial commit.`,
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Check if we're on trunk branch
-		onTrunk, err := isOnTrunkBranch()
+		// Check if we're on trunk branch and load config
+		onTrunk, cfg, err := isOnTrunkBranch()
 		if err != nil {
 			return err
 		}
 		if !onTrunk {
-			cfg, err := config.Load()
-			if err != nil {
-				return fmt.Errorf("failed to load config: %w", err)
-			}
 			return fmt.Errorf("create command can only be run on trunk branch (%s)", cfg.TrunkBranch)
 		}
 
@@ -77,11 +73,6 @@ var createCmd = &cobra.Command{
 		}
 
 		// Load config and add this branch as a managed branch
-		cfg, err := config.Load()
-		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
-		}
-
 		cfg.ManagedBranches[branchName] = config.Branch{
 			Name:        branchName,
 			Parent:      cfg.TrunkBranch,
