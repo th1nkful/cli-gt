@@ -115,7 +115,7 @@ func createBranch(branchName string) error {
 	return nil
 }
 
-// getBranches returns a list of local branches sorted by committer date (most recent first)
+// getBranches returns a list of local branches sorted by committer date (oldest first)
 // with the trunk branch moved to the end of the list
 func getBranches() ([]string, error) {
 	// Get trunk branch from config
@@ -125,8 +125,8 @@ func getBranches() ([]string, error) {
 	}
 	trunkBranch := cfg.TrunkBranch
 
-	// Get all local branches sorted by committer date (most recent first)
-	cmd := exec.Command("git", "for-each-ref", "--sort=-committerdate", "--format=%(refname:short)", "refs/heads")
+	// Get all local branches sorted by committer date (oldest first)
+	cmd := exec.Command("git", "for-each-ref", "--sort=committerdate", "--format=%(refname:short)", "refs/heads")
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get branches: %w", err)
