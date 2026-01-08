@@ -30,10 +30,6 @@ var checkoutCmd = &cobra.Command{
 			return err
 		}
 
-		if len(branches) == 0 {
-			return fmt.Errorf("no branches available")
-		}
-
 		// Use survey to prompt for branch selection
 		var selectedBranch string
 		prompt := &survey.Select{
