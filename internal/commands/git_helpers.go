@@ -9,6 +9,10 @@ import (
 	"github.com/th1nkful/cli-gt/internal/config"
 )
 
+const (
+	maxBranchNameLength = 50
+)
+
 // getCurrentBranch returns the name of the current git branch
 func getCurrentBranch() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
@@ -72,9 +76,9 @@ func sanitizeBranchName(message string) string {
 	// Remove leading/trailing hyphens
 	name = strings.Trim(name, "-")
 
-	// Limit length to 50 characters
-	if len(name) > 50 {
-		name = name[:50]
+	// Limit length to maxBranchNameLength characters
+	if len(name) > maxBranchNameLength {
+		name = name[:maxBranchNameLength]
 	}
 
 	// Remove trailing hyphen if trimmed at a hyphen

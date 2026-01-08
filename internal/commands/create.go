@@ -72,7 +72,7 @@ var createCmd = &cobra.Command{
 			return err
 		}
 
-		// Load config and add this branch as a managed branch
+		// Add this branch as a managed branch in config
 		cfg.ManagedBranches[branchName] = config.Branch{
 			Name:        branchName,
 			Parent:      cfg.TrunkBranch,
