@@ -106,6 +106,16 @@ func createCommit(message string) error {
 	return nil
 }
 
+// amendCommit amends the most recent commit without editing the message
+func amendCommit() error {
+	cmd := exec.Command("git", "commit", "--amend", "--no-edit")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to amend commit: %w\nOutput: %s", err, string(output))
+	}
+	return nil
+}
+
 // createBranch creates a new branch with the given name
 func createBranch(branchName string) error {
 	cmd := exec.Command("git", "checkout", "-b", branchName)
