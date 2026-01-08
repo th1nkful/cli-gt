@@ -13,9 +13,9 @@ var (
 )
 
 var createCmd = &cobra.Command{
-	Use:   "create [branch-name]",
+	Use:   "create [commit-message]",
 	Short: "Create a new branch and commit",
-	Long:  `Create a new branch and commit. This creates a new branch from the current state and makes an initial commit.`,
+	Long:  `Create a new branch and commit. The commit message can be provided as a positional argument or via -m flag.`,
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Check if we're on trunk branch and load config
@@ -27,21 +27,20 @@ var createCmd = &cobra.Command{
 			return fmt.Errorf("create command can only be run on trunk branch (%s)", cfg.TrunkBranch)
 		}
 
-		// Determine commit message first - it's required
-		commitMessage := createMessage
-		if commitMessage == "" {
-			return fmt.Errorf("commit message is required (-m flag)")
+		// Get commit message from positional arg or -m flag
+		var commitMessage string
+		if len(args) > 0 {
+			// Positional argument takes precedence
+			commitMessage = args[0]
+		} else if createMessage != "" {
+			// Fall back to -m flag
+			commitMessage = createMessage
+		} else {
+			return fmt.Errorf("commit message is required (provide as argument or via -m flag)")
 		}
 
-		// Determine branch name
-		var branchName string
-		if len(args) > 0 {
-			// Use provided branch name
-			branchName = args[0]
-		} else {
-			// Convert message to branch name
-			branchName = sanitizeBranchName(commitMessage)
-		}
+		// Generate branch name from commit message
+		branchName := sanitizeBranchName(commitMessage)
 
 		// Check if branch already exists
 		localExists, remoteExists, err := branchExists(branchName)
@@ -90,5 +89,5 @@ var createCmd = &cobra.Command{
 
 func init() {
 	createCmd.Flags().BoolVarP(&createAll, "all", "a", false, "Stage all changes before committing")
-	createCmd.Flags().StringVarP(&createMessage, "message", "m", "", "Commit message (also used to generate branch name if not provided)")
+	createCmd.Flags().StringVarP(&createMessage, "message", "m", "", "Commit message (used to generate branch name)")
 }
