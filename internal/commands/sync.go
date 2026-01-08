@@ -153,7 +153,7 @@ func updateTrunkBranch(trunkBranch string) error {
 	return nil
 }
 
-// checkoutBranch checks out the specified branch
+// syncCheckoutBranch checks out the specified branch
 func syncCheckoutBranch(branchName string) error {
 	cmd := exec.Command("git", "checkout", branchName)
 	output, err := cmd.CombinedOutput()
@@ -163,7 +163,7 @@ func syncCheckoutBranch(branchName string) error {
 	return nil
 }
 
-// deleteBranch deletes a local branch
+// syncDeleteBranch deletes a local branch
 func syncDeleteBranch(branchName, trunkBranch string) error {
 	// First checkout trunk to avoid deleting the branch we're on
 	if err := syncCheckoutBranch(trunkBranch); err != nil {
