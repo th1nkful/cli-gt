@@ -42,11 +42,16 @@ func branchExists(branchName string) (bool, bool, error) {
 
 	// Check remote branches
 	remoteCmd := exec.Command("git", "ls-remote", "--heads", "origin", branchName)
-	remoteOutput, err := remoteCmd.Output()
+	remoteOutput, err := remoteCmd.CombinedOutput()
 	if err != nil {
-		// If ls-remote fails, it might be because there's no remote
-		// We'll consider this as the remote branch not existing
-		return localExists, false, nil
+		// Check if the error is due to no remote configured
+		if strings.Contains(string(remoteOutput), "does not appear to be a git repository") ||
+			strings.Contains(err.Error(), "exit status 128") {
+			// No remote configured, that's ok - just return local status
+			return localExists, false, nil
+		}
+		// Other errors (network issues, auth failures) should be reported
+		return localExists, false, fmt.Errorf("failed to check remote branches: %w", err)
 	}
 	remoteExists := len(strings.TrimSpace(string(remoteOutput))) > 0
 

@@ -24,12 +24,17 @@ var createCmd = &cobra.Command{
 			return err
 		}
 		if !onTrunk {
-			cfg, _ := config.Load()
-			trunkBranch := "main"
-			if cfg != nil {
-				trunkBranch = cfg.TrunkBranch
+			cfg, err := config.Load()
+			if err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
 			}
-			return fmt.Errorf("create command can only be run on trunk branch (%s)", trunkBranch)
+			return fmt.Errorf("create command can only be run on trunk branch (%s)", cfg.TrunkBranch)
+		}
+
+		// Determine commit message first - it's required
+		commitMessage := createMessage
+		if commitMessage == "" {
+			return fmt.Errorf("commit message is required (-m flag)")
 		}
 
 		// Determine branch name
@@ -37,11 +42,9 @@ var createCmd = &cobra.Command{
 		if len(args) > 0 {
 			// Use provided branch name
 			branchName = args[0]
-		} else if createMessage != "" {
-			// Convert message to branch name
-			branchName = sanitizeBranchName(createMessage)
 		} else {
-			return fmt.Errorf("must provide either a branch name or a message (-m)")
+			// Convert message to branch name
+			branchName = sanitizeBranchName(commitMessage)
 		}
 
 		// Check if branch already exists
@@ -63,22 +66,13 @@ var createCmd = &cobra.Command{
 			}
 		}
 
-		// Determine commit message
-		commitMessage := createMessage
-		if commitMessage == "" && len(args) > 0 {
-			commitMessage = args[0]
-		}
-		if commitMessage == "" {
-			return fmt.Errorf("must provide a commit message (-m)")
-		}
-
-		// Create the commit first (on trunk)
-		if err := createCommit(commitMessage); err != nil {
+		// Create and checkout the new branch first (before committing)
+		if err := createBranch(branchName); err != nil {
 			return err
 		}
 
-		// Create and checkout the new branch
-		if err := createBranch(branchName); err != nil {
+		// Create the commit on the new branch
+		if err := createCommit(commitMessage); err != nil {
 			return err
 		}
 
