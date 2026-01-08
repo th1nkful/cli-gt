@@ -114,3 +114,30 @@ func createBranch(branchName string) error {
 	}
 	return nil
 }
+
+// resetLastCommit resets the last commit while keeping the changes in the working directory
+func resetLastCommit() error {
+	cmd := exec.Command("git", "reset", "--soft", "HEAD~1")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to reset commit: %w", err)
+	}
+	return nil
+}
+
+// checkoutBranch switches to the specified branch
+func checkoutBranch(branchName string) error {
+	cmd := exec.Command("git", "checkout", branchName)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to checkout branch: %w", err)
+	}
+	return nil
+}
+
+// deleteBranch deletes the specified branch
+func deleteBranch(branchName string) error {
+	cmd := exec.Command("git", "branch", "-D", branchName)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to delete branch: %w", err)
+	}
+	return nil
+}
