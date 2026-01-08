@@ -23,7 +23,7 @@ func TestRootCommandHasSubcommands(t *testing.T) {
 }
 
 func TestCreateCommandExists(t *testing.T) {
-	if createCmd.Use != "create [branch-name]" {
+	if createCmd.Use != "create [commit-message]" {
 		t.Errorf("create command Use string is incorrect: %s", createCmd.Use)
 	}
 }
