@@ -15,7 +15,8 @@ var (
 var createCmd = &cobra.Command{
 	Use:   "create [commit-message]",
 	Short: "Create a new branch and commit",
-	Long:  `Create a new branch and commit. The commit message can be provided as a positional argument or via -m flag.`,
+	Long:  `Create a new branch and commit. The commit message is used to generate the branch name.
+Provide the commit message as a positional argument or via -m flag (positional takes precedence if both provided).`,
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Check if we're on trunk branch and load config
