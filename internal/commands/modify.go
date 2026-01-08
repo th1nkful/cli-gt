@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 )
@@ -56,10 +55,8 @@ var modifyCmd = &cobra.Command{
 		}
 
 		// Amend the commit
-		amendCmd := exec.Command("git", "commit", "--amend", "--no-edit")
-		output, err := amendCmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed to amend commit: %w\nOutput: %s", err, string(output))
+		if err := amendCommit(); err != nil {
+			return err
 		}
 
 		fmt.Println("✔ gt modify: amended latest commit")
