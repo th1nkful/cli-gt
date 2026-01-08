@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -13,10 +14,43 @@ var checkoutCmd = &cobra.Command{
 	Long:    `Checkout to a branch. If no branch is supplied, list available branches with trunk branch at the bottom and most recently used above that, which you can navigate using up/down arrows to select from the list.`,
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("checkout command - not yet implemented")
+		// If branch is provided as argument, switch directly
 		if len(args) > 0 {
-			fmt.Printf("Branch: %s\n", args[0])
+			branchName := args[0]
+			if err := switchBranch(branchName); err != nil {
+				return err
+			}
+			fmt.Printf("Switched to branch '%s'\n", branchName)
+			return nil
 		}
+
+		// No branch provided - show interactive selection
+		branches, err := getBranches()
+		if err != nil {
+			return err
+		}
+
+		if len(branches) == 0 {
+			return fmt.Errorf("no branches available")
+		}
+
+		// Use survey to prompt for branch selection
+		var selectedBranch string
+		prompt := &survey.Select{
+			Message: "checkout>",
+			Options: branches,
+		}
+
+		if err := survey.AskOne(prompt, &selectedBranch); err != nil {
+			return fmt.Errorf("branch selection cancelled or failed: %w", err)
+		}
+
+		// Switch to the selected branch
+		if err := switchBranch(selectedBranch); err != nil {
+			return err
+		}
+
+		fmt.Printf("Switched to branch '%s'\n", selectedBranch)
 		return nil
 	},
 }

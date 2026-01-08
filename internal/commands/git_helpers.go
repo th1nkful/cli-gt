@@ -114,3 +114,55 @@ func createBranch(branchName string) error {
 	}
 	return nil
 }
+
+// getBranches returns a list of local branches sorted by committer date (most recent first)
+// with the trunk branch moved to the end of the list
+func getBranches() ([]string, error) {
+	// Get trunk branch from config
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+	trunkBranch := cfg.TrunkBranch
+
+	// Get all local branches sorted by committer date (most recent first)
+	cmd := exec.Command("git", "for-each-ref", "--sort=-committerdate", "--format=%(refname:short)", "refs/heads")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get branches: %w", err)
+	}
+
+	// Parse branches
+	allBranches := strings.Split(strings.TrimSpace(string(output)), "\n")
+	if len(allBranches) == 0 || (len(allBranches) == 1 && allBranches[0] == "") {
+		return nil, fmt.Errorf("no branches found")
+	}
+
+	// Separate trunk branch from others
+	var branches []string
+	var trunk string
+	for _, branch := range allBranches {
+		if branch == trunkBranch {
+			trunk = branch
+		} else {
+			branches = append(branches, branch)
+		}
+	}
+
+	// Add trunk branch at the end if it exists
+	if trunk != "" {
+		branches = append(branches, trunk)
+	}
+
+	return branches, nil
+}
+
+// switchBranch switches to the specified branch using git switch
+func switchBranch(branchName string) error {
+	cmd := exec.Command("git", "switch", branchName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to switch to branch '%s': %w\nOutput: %s", branchName, err, string(output))
+	}
+	return nil
+}
