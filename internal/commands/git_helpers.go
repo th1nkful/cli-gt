@@ -134,20 +134,40 @@ func resetLastCommit() error {
 	return nil
 }
 
-// checkoutBranch switches to the specified branch
-func checkoutBranch(branchName string) error {
-	cmd := exec.Command("git", "checkout", branchName)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to checkout branch: %w", err)
+// switchBranch switches to the specified branch using git switch
+func switchBranch(branchName string) error {
+	cmd := exec.Command("git", "switch", branchName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to switch to branch '%s': %w\nOutput: %s", branchName, err, string(output))
 	}
 	return nil
 }
 
 // deleteBranch deletes the specified branch
-func deleteBranch(branchName string) error {
-	cmd := exec.Command("git", "branch", "-D", branchName)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to delete branch: %w", err)
+// If safe is true, tries safe delete first (-d), then force delete (-D) if needed
+// If safe is false, directly uses force delete (-D)
+func deleteBranch(branchName string, safe bool) error {
+	var cmd *exec.Cmd
+	if safe {
+		// Try safe delete first (-d), which fails if branch has unmerged commits
+		cmd = exec.Command("git", "branch", "-d", branchName)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			// If safe delete fails, try force delete (-D)
+			fmt.Printf("Note: Branch '%s' has unmerged commits, force deleting...\n", branchName)
+			cmd = exec.Command("git", "branch", "-D", branchName)
+			output, err = cmd.CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("failed to delete branch '%s': %w\nOutput: %s", branchName, err, string(output))
+			}
+		}
+	} else {
+		// Force delete
+		cmd = exec.Command("git", "branch", "-D", branchName)
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to delete branch: %w", err)
+		}
 	}
 	return nil
 }
@@ -193,14 +213,4 @@ func getBranches() ([]string, error) {
 	}
 
 	return branches, nil
-}
-
-// switchBranch switches to the specified branch using git switch
-func switchBranch(branchName string) error {
-	cmd := exec.Command("git", "switch", branchName)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to switch to branch '%s': %w\nOutput: %s", branchName, err, string(output))
-	}
-	return nil
 }
