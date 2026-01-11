@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -145,9 +146,8 @@ func isRebaseInProgress() (bool, error) {
 	}
 	rebaseMergePath := strings.TrimSpace(string(output))
 	
-	// Check if rebase-merge exists
-	checkCmd := exec.Command("test", "-d", rebaseMergePath)
-	if checkCmd.Run() == nil {
+	// Check if rebase-merge exists using os.Stat
+	if _, err := os.Stat(rebaseMergePath); err == nil {
 		return true, nil
 	}
 	
@@ -159,8 +159,8 @@ func isRebaseInProgress() (bool, error) {
 	}
 	rebaseApplyPath := strings.TrimSpace(string(output))
 	
-	checkCmd = exec.Command("test", "-d", rebaseApplyPath)
-	if checkCmd.Run() == nil {
+	// Check if rebase-apply exists using os.Stat
+	if _, err := os.Stat(rebaseApplyPath); err == nil {
 		return true, nil
 	}
 	
