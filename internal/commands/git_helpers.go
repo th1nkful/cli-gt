@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -134,20 +135,34 @@ func resetLastCommit() error {
 	return nil
 }
 
-// checkoutBranch switches to the specified branch
-func checkoutBranch(branchName string) error {
-	cmd := exec.Command("git", "checkout", branchName)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to checkout branch: %w", err)
+// isRebaseInProgress checks if a git rebase is currently in progress
+func isRebaseInProgress() (bool, error) {
+	// Check for rebase-merge or rebase-apply directories
+	// These are created by git during an interactive or non-interactive rebase
+	cmd := exec.Command("git", "rev-parse", "--git-path", "rebase-merge")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("failed to check rebase status: %w", err)
 	}
-	return nil
-}
-
-// deleteBranch deletes the specified branch
-func deleteBranch(branchName string) error {
-	cmd := exec.Command("git", "branch", "-D", branchName)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to delete branch: %w", err)
+	rebaseMergePath := strings.TrimSpace(string(output))
+	
+	// Check if rebase-merge exists using os.Stat
+	if _, err := os.Stat(rebaseMergePath); err == nil {
+		return true, nil
 	}
-	return nil
+	
+	// Check for rebase-apply directory (used by git am and some rebases)
+	cmd = exec.Command("git", "rev-parse", "--git-path", "rebase-apply")
+	output, err = cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("failed to check rebase status: %w", err)
+	}
+	rebaseApplyPath := strings.TrimSpace(string(output))
+	
+	// Check if rebase-apply exists using os.Stat
+	if _, err := os.Stat(rebaseApplyPath); err == nil {
+		return true, nil
+	}
+	
+	return false, nil
 }
