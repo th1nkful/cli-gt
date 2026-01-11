@@ -37,6 +37,7 @@ gt [command] [flags]
 - **`sync`** - Updates trunk branch from origin, rebases local tracked branches onto trunk again. If a local tracked branch no longer exists on origin, prompts for confirmation (y/n) to delete the branch.
 - **`restack`** - Restack all managed branches to ensure they are up to date with their parent branch (assuming always trunk for now).
 - **`submit`** - Submit the current branch for review (e.g., create/update a pull request). Will not run on trunk branch.
+- **`continue`** - Continue a rebase in progress. This is equivalent to `git rebase --continue` and only works if a rebase is currently in progress.
 
 ### Configuration
 
