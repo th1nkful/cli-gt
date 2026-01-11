@@ -43,7 +43,7 @@ var popCmd = &cobra.Command{
 		}
 
 		// Delete the branch
-		if err := deleteBranch(currentBranch); err != nil {
+		if err := deleteBranch(currentBranch, cfg.TrunkBranch); err != nil {
 			return err
 		}
 

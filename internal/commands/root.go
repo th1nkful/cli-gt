@@ -25,4 +25,5 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(restackCmd)
 	rootCmd.AddCommand(submitCmd)
+	rootCmd.AddCommand(continueCmd)
 }

@@ -6,7 +6,7 @@ import (
 
 func TestRootCommandHasSubcommands(t *testing.T) {
 	// Verify all expected commands are registered
-	expectedCommands := []string{"create", "pop", "modify", "checkout", "sync", "restack", "submit"}
+	expectedCommands := []string{"create", "pop", "modify", "checkout", "sync", "restack", "submit", "continue"}
 	
 	for _, cmdName := range expectedCommands {
 		found := false
@@ -89,5 +89,11 @@ func TestRestackCommandExists(t *testing.T) {
 func TestSubmitCommandExists(t *testing.T) {
 	if submitCmd.Use != "submit" {
 		t.Errorf("submit command Use string is incorrect: %s", submitCmd.Use)
+	}
+}
+
+func TestContinueCommandExists(t *testing.T) {
+	if continueCmd.Use != "continue" {
+		t.Errorf("continue command Use string is incorrect: %s", continueCmd.Use)
 	}
 }
