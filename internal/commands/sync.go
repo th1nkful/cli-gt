@@ -81,7 +81,10 @@ func runSync(cmd *cobra.Command, args []string) error {
 		}
 		response = strings.TrimSpace(strings.ToLower(response))
 		if response == "y" || response == "yes" {
-			if err := deleteBranch(branchName, cfg.TrunkBranch); err != nil {
+			// First switch to trunk to avoid deleting the branch we're on
+			if err := switchBranch(cfg.TrunkBranch); err != nil {
+				fmt.Printf("Warning: Failed to switch to trunk before deleting '%s': %v\n", branchName, err)
+			} else if err := deleteBranch(branchName, true); err != nil {
 				fmt.Printf("Warning: Failed to delete branch '%s': %v\n", branchName, err)
 			} else {
 				// Remove from managed branches and save config immediately
@@ -108,12 +111,12 @@ func runSync(cmd *cobra.Command, args []string) error {
 	// Step 6: Return to the original branch (if it still exists)
 	localExists, _, _ := branchExists(currentBranch)
 	if localExists {
-		if err := checkoutBranch(currentBranch); err != nil {
+		if err := switchBranch(currentBranch); err != nil {
 			fmt.Printf("Warning: Failed to return to branch '%s': %v\n", currentBranch, err)
 		}
 	} else {
 		// If original branch was deleted, checkout trunk
-		if err := checkoutBranch(cfg.TrunkBranch); err != nil {
+		if err := switchBranch(cfg.TrunkBranch); err != nil {
 			fmt.Printf("Warning: Failed to checkout trunk branch '%s': %v\n", cfg.TrunkBranch, err)
 		}
 	}
@@ -140,7 +143,7 @@ func fetchFromOrigin() error {
 // updateTrunkBranch updates the trunk branch from origin
 func updateTrunkBranch(trunkBranch string) error {
 	// First checkout the trunk branch
-	if err := checkoutBranch(trunkBranch); err != nil {
+	if err := switchBranch(trunkBranch); err != nil {
 		return err
 	}
 
@@ -153,42 +156,10 @@ func updateTrunkBranch(trunkBranch string) error {
 	return nil
 }
 
-// checkoutBranch checks out the specified branch
-func checkoutBranch(branchName string) error {
-	cmd := exec.Command("git", "checkout", branchName)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to checkout branch '%s': %w\nOutput: %s", branchName, err, string(output))
-	}
-	return nil
-}
-
-// deleteBranch deletes a local branch
-func deleteBranch(branchName, trunkBranch string) error {
-	// First checkout trunk to avoid deleting the branch we're on
-	if err := checkoutBranch(trunkBranch); err != nil {
-		return err
-	}
-
-	// Try safe delete first (-d), which fails if branch has unmerged commits
-	cmd := exec.Command("git", "branch", "-d", branchName)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		// If safe delete fails, try force delete (-D)
-		fmt.Printf("Note: Branch '%s' has unmerged commits, force deleting...\n", branchName)
-		cmd = exec.Command("git", "branch", "-D", branchName)
-		output, err = cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed to delete branch '%s': %w\nOutput: %s", branchName, err, string(output))
-		}
-	}
-	return nil
-}
-
 // rebaseBranchOntoTrunk rebases a branch onto the trunk branch
 func rebaseBranchOntoTrunk(branchName, trunkBranch string) error {
 	// Checkout the branch to rebase
-	if err := checkoutBranch(branchName); err != nil {
+	if err := switchBranch(branchName); err != nil {
 		return err
 	}
 

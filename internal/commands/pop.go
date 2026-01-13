@@ -38,12 +38,12 @@ var popCmd = &cobra.Command{
 		}
 
 		// Checkout to parent branch
-		if err := checkoutBranch(parentBranch); err != nil {
+		if err := switchBranch(parentBranch); err != nil {
 			return err
 		}
 
-		// Delete the branch
-		if err := deleteBranch(currentBranch); err != nil {
+		// Delete the branch (force delete since we know it's safe - we just reset the commit)
+		if err := deleteBranch(currentBranch, false); err != nil {
 			return err
 		}
 
